@@ -20,8 +20,9 @@ function createWindow(): void {
     },
   });
 
-  mainWindow.loadFile(path.join(app.getAppPath(), "index.html")).catch((err) => {
-    console.error("[Main] Failed to load index.html", err);
+  const uiPath = path.join(app.getAppPath(), "dist-ui", "index.html");
+  mainWindow.loadFile(uiPath).catch((err) => {
+    console.error("[Main] Failed to load UI", err);
   });
 
   mainWindow.on("closed", () => {
