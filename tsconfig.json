@@ -12,6 +12,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*", "server/**/*"],
-  "exclude": ["node_modules","src/main.tsx","src/App.tsx","src/index.css","src/components","src/pages","src/data"]
+  "include": ["src/**/*", "server/**/*", "main/**/*", "shared/**/*"],
+  "exclude": ["node_modules", "src/main.tsx", "src/App.tsx", "src/index.css", "src/components", "src/pages", "src/data"]
 }
