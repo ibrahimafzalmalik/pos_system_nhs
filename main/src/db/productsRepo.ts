@@ -5,6 +5,7 @@ import {
   ProductQuerySchema,
   ProductUpdateSchema,
 } from "../../../shared/product";
+import { log } from "../utils/log";
 
 type Row = {
   id: number;
@@ -38,6 +39,7 @@ function rowToProduct(r: Row): Product {
   };
 }
 
+/** List only — SELECT. Never UPDATE or DELETE. */
 function listProducts(query: ProductQuery = {}): Product[] {
   const parsed = ProductQuerySchema.parse(query);
   const status = parsed.status ?? "ACTIVE";
@@ -169,6 +171,7 @@ function setProductStatus(id: number, status: Status): Product {
 }
 
 function deleteProduct(id: number): void {
+  log("[productsRepo] deleteProduct called, id:", id);
   const db = getDb();
   const existing = getProductById(id);
   if (!existing) throw new Error("PRODUCT_NOT_FOUND");

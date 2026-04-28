@@ -8,6 +8,7 @@ import {
 } from "../../../shared/product";
 import { Status } from "../../../shared/product";
 import { productsRepo } from "../db/productsRepo";
+import { log } from "../utils/log";
 import { err, ok, type IpcErrorCode } from "./ipcResult";
 
 const IdSchema = z.object({ id: z.number() });
@@ -95,6 +96,7 @@ export function registerProductsIpc(): void {
   ipcMain.handle("products:delete", async (_event, raw: unknown) => {
     try {
       const { id } = IdSchema.parse(raw);
+      log("[productsIpc] products:delete invoked, id:", id);
       productsRepo.deleteProduct(id);
       return ok(undefined);
     } catch (e) {

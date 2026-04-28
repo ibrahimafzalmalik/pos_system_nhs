@@ -12,17 +12,20 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+export type StatusFilter = "ACTIVE" | "INACTIVE" | "ALL";
+
 export function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ACTIVE");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const searchDebounced = useDebounce(searchInput, 300);
 
-  const fetchProducts = useCallback(async (q: string, status: "ACTIVE" | "INACTIVE" | "ALL" = "ACTIVE") => {
+  const fetchProducts = useCallback(async (q: string, status: StatusFilter) => {
     setError(null);
     setLoading(true);
     const result = await window.api.products.list({ q: q.trim() || undefined, status });
@@ -32,8 +35,13 @@ export function Products() {
   }, []);
 
   useEffect(() => {
-    fetchProducts(searchDebounced, "ACTIVE");
-  }, [searchDebounced, fetchProducts]);
+    fetchProducts(searchDebounced, statusFilter);
+  }, [searchDebounced, statusFilter, fetchProducts]);
+
+  /** Regression guard: filter change only updates state. Effect below calls list() only — never delete or setStatus. */
+  function handleFilterChange(status: StatusFilter) {
+    setStatusFilter(status);
+  }
 
   function openAddModal() {
     setEditingProduct(null);
@@ -64,7 +72,7 @@ export function Products() {
       if (result.ok) {
         setModalOpen(false);
         setEditingProduct(null);
-        await fetchProducts(searchDebounced, "ACTIVE");
+        await fetchProducts(searchDebounced, statusFilter);
       } else {
         setError(result.error.message);
       }
@@ -81,7 +89,7 @@ export function Products() {
       });
       if (result.ok) {
         setModalOpen(false);
-        await fetchProducts(searchDebounced, "ACTIVE");
+        await fetchProducts(searchDebounced, statusFilter);
       } else {
         setError(result.error.message);
       }
@@ -92,7 +100,7 @@ export function Products() {
     const newStatus = p.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     setError(null);
     const result = await window.api.products.setStatus(p.id, newStatus);
-    if (result.ok) await fetchProducts(searchDebounced, "ACTIVE");
+    if (result.ok) await fetchProducts(searchDebounced, statusFilter);
     else setError(result.error.message);
   }
 
@@ -114,7 +122,7 @@ export function Products() {
         </button>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <input
           type="search"
           placeholder="Search by name, SKU, or barcode..."
@@ -123,6 +131,22 @@ export function Products() {
           className="flex-1 max-w-md rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
           aria-label="Search products"
         />
+        <fieldset className="flex items-center gap-3" aria-label="Status filter">
+          <legend className="sr-only">Filter by status</legend>
+          {(["ACTIVE", "INACTIVE", "ALL"] as const).map((status) => (
+            <label key={status} className="flex items-center gap-1.5 text-sm text-slate-700">
+              <input
+                type="radio"
+                name="statusFilter"
+                value={status}
+                checked={statusFilter === status}
+                onChange={() => handleFilterChange(status)}
+                className="rounded-full border-slate-300 text-amber-600 focus:ring-amber-500"
+              />
+              {status === "ALL" ? "All" : status === "ACTIVE" ? "Active" : "Inactive"}
+            </label>
+          ))}
+        </fieldset>
       </div>
 
       {error && (
